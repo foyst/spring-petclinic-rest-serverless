@@ -16,9 +16,11 @@
 package org.springframework.samples.petclinic.model;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -72,7 +74,6 @@ public class Pet extends NamedEntity {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "pet", fetch = FetchType.EAGER)
     private Set<Visit> visits;
 
-
     public void setBirthDate(Date birthDate) {
         this.birthDate = birthDate;
     }
@@ -104,8 +105,8 @@ public class Pet extends NamedEntity {
         return this.visits;
     }
 
-    protected void setVisitsInternal(Set<Visit> visits) {
-        this.visits = visits;
+    public void setVisitsInternal(Collection<Visit> visits) {
+        this.visits = new LinkedHashSet<>(visits);
     }
 
     public List<Visit> getVisits() {
