@@ -10,6 +10,7 @@ import org.springframework.samples.petclinic.service.ClinicService;
 
 import java.util.Collection;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 @Configuration
 public class LambdaConfig {
@@ -20,10 +21,19 @@ public class LambdaConfig {
     private ClinicService clinicService;
 
     @Bean
-    public Function<Integer, Collection<Owner>> getAllOwners() {
-        return ownerId -> {
-            LOG.info("Request for Owner by Id");
+    public Supplier<Collection<Owner>> getAllOwners() {
+        return () -> {
+            LOG.info("Lambda Request for all Owners");
             return this.clinicService.findAllOwners();
 		};
+    }
+
+    @Bean
+    public Function<Integer, Owner> getOwnerById() {
+        return (ownerId) -> {
+            LOG.info("Lambda Request for Owner with id: " + ownerId);
+            final Owner owner = this.clinicService.findOwnerById(ownerId);
+            return owner;
+        };
     }
 }
