@@ -1,6 +1,27 @@
 #!/usr/bin/env node
 import * as cdk from '@aws-cdk/core';
-import { CdkStack } from '../lib/cdk-stack';
+import {VpcStack} from "../lib/vpc-stack";
+import {RdsStack} from "../lib/rds-stack";
+import {LoadBalancerStack} from "../lib/lb-stack";
+import {EcsStack} from "../lib/ecs-stack";
+import {LoadBalancerAssociationStack} from "../lib/lb-assoc-stack";
 
 const app = new cdk.App();
-new CdkStack(app, 'CdkStack');
+
+const vpcStack = new VpcStack(app, 'VpcStack')
+const rdsStack = new RdsStack(app, 'RdsStack', {
+    vpc: vpcStack.vpc
+})
+const lbStack = new LoadBalancerStack(app, 'LBStack', {
+    vpc: vpcStack.vpc
+})
+const ecsStack = new EcsStack(app, 'ECSStack', {
+    vpc: vpcStack.vpc,
+    rdsConfig: rdsStack.rdsConfig
+})
+const lbAssociationStack = new LoadBalancerAssociationStack(app, 'LBAssociationStack', {
+    vpc: vpcStack.vpc,
+    lbListener: lbStack.listener,
+    ecsService: ecsStack.ecsService
+})
+
