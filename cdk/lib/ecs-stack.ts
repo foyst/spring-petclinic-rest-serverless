@@ -3,6 +3,7 @@ import * as cdk from '@aws-cdk/core';
 import * as ecs from '@aws-cdk/aws-ecs';
 import {Protocol} from '@aws-cdk/aws-ecs';
 import * as rds from "@aws-cdk/aws-rds";
+import {Duration} from "@aws-cdk/core";
 
 interface EcsStackProps extends cdk.StackProps {
     vpc: ec2.Vpc
@@ -58,7 +59,8 @@ export class EcsStack extends cdk.Stack {
             cluster: ecsCluster,
             serviceName: 'petclinic',
             taskDefinition: ecsTaskDefinition,
-            securityGroups: [ecsSecurityGroup]
+            securityGroups: [ecsSecurityGroup],
+            healthCheckGracePeriod: Duration.minutes(1)
         });
 
         ecsSecurityGroup.connections.allowTo(props?.rdsConfig!, ec2.Port.tcp(3306))

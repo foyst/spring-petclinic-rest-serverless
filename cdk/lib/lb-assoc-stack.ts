@@ -1,6 +1,6 @@
 import * as ec2 from '@aws-cdk/aws-ec2';
 import * as cdk from '@aws-cdk/core';
-import {Construct} from '@aws-cdk/core';
+import {Construct, Duration} from '@aws-cdk/core';
 import * as elbv2 from '@aws-cdk/aws-elasticloadbalancingv2';
 import {ListenerAction} from '@aws-cdk/aws-elasticloadbalancingv2';
 import * as ecs from "@aws-cdk/aws-ecs/lib/fargate/fargate-service";
@@ -26,7 +26,9 @@ export class LoadBalancerAssociationStack extends cdk.Stack {
                 path: '/actuator/health',
                 enabled: true,
                 healthyHttpCodes: '200',
-                healthyThresholdCount: 2
+                healthyThresholdCount: 1,
+                interval: Duration.seconds(30),
+                unhealthyThresholdCount: 1
             }
         })
 
