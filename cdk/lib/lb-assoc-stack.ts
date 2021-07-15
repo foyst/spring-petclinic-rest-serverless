@@ -26,9 +26,9 @@ export class LoadBalancerAssociationStack extends cdk.Stack {
                 path: '/actuator/health',
                 enabled: true,
                 healthyHttpCodes: '200',
-                healthyThresholdCount: 1,
+                healthyThresholdCount: 2,
                 interval: Duration.seconds(30),
-                unhealthyThresholdCount: 1
+                unhealthyThresholdCount: 2
             }
         })
 
