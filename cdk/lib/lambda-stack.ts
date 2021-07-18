@@ -23,40 +23,59 @@ export class LambdaStack extends cdk.Stack {
             allowAllOutbound: true
         });
 
-        const getAllOwnersFunction = new Function(this, 'GetAllOwnersFunction', {
-            vpc: props?.vpc,
-            runtime: Runtime.JAVA_8,
-            code: Code.fromAsset(path.join(__dirname, '../../'), {
-                bundling: {
-                    image: Runtime.JAVA_8.bundlingImage,
-                    command: [
-                        "/bin/sh",
-                        "-c",
-                        ["cd /asset-input/ ",
+        const bundlingOptions = {
+            bundling: {
+                image: Runtime.JAVA_8.bundlingImage,
+                command: [
+                    "/bin/sh",
+                    "-c",
+                    ["cd /asset-input/ ",
                         // "ls -lsah ",
                         "./mvnw clean package -P lambda -DskipTests ",
                         "cp /asset-input/target/spring-petclinic-rest-2.4.2-aws.jar /asset-output/"].join(" && ")
-                    ],
-                    outputType: BundlingOutput.ARCHIVED,
-                    user: 'root',
-                    volumes: [{hostPath: `${homedir()}/.m2`, containerPath: '/root/.m2/'}]
-                }
-            }),
+                ],
+                outputType: BundlingOutput.ARCHIVED,
+                user: 'root',
+                volumes: [{hostPath: `${homedir()}/.m2`, containerPath: '/root/.m2/'}]
+            }
+        };
+
+        const envVariables = {
+            'SPRING_DATASOURCE_URL': `jdbc:mysql://${props?.rdsConfig.dbInstanceEndpointAddress!}:3306/petclinic?useUnicode=true`,
+            'SPRING_PROFILES_ACTIVE': 'mysql,spring-data-jpa',
+            'SPRING_DATASOURCE_USERNAME': rdsCredentialsSecret.secretValueFromJson('username').toString(),
+            'SPRING_DATASOURCE_PASSWORD': rdsCredentialsSecret.secretValueFromJson('password').toString()
+        }
+
+        const baseProps = {
+            vpc: props?.vpc,
+            runtime: Runtime.JAVA_8,
+            code: Code.fromAsset(path.join(__dirname, '../../'), bundlingOptions),
             handler: 'org.springframework.cloud.function.adapter.aws.FunctionInvoker',
-            functionName: 'get-all-owners',
             vpcSubnets: {
                 subnetType: ec2.SubnetType.PRIVATE
-            },
-            environment: {
-                'SPRING_DATASOURCE_URL': `jdbc:mysql://${props?.rdsConfig.dbInstanceEndpointAddress!}:3306/petclinic?useUnicode=true`,
-                'SPRING_PROFILES_ACTIVE': 'mysql,spring-data-jpa',
-                'SPRING_DATASOURCE_USERNAME': rdsCredentialsSecret.secretValueFromJson('username').toString(),
-                'SPRING_DATASOURCE_PASSWORD': rdsCredentialsSecret.secretValueFromJson('password').toString(),
-                'SPRING_CLOUD_FUNCTION_DEFINITION': 'getAllOwners'
             },
             memorySize: 3072,
             timeout: Duration.minutes(1),
             securityGroups: [lambdaSecurityGroup]
+        }
+
+        const getAllOwnersFunction = new Function(this, 'GetAllOwnersFunction', {
+            ...baseProps,
+            functionName: 'get-all-owners',
+            environment: {
+                ...envVariables,
+                'SPRING_CLOUD_FUNCTION_DEFINITION': 'getAllOwners'
+            },
+        })
+
+        const getOwnerByIdFunction = new Function(this, 'GetOwnerByIdFunction', {
+            ...baseProps,
+            functionName: 'get-owner-by-id',
+            environment: {
+                ...envVariables,
+                'SPRING_CLOUD_FUNCTION_DEFINITION': 'getOwnerById'
+            },
         })
 
         lambdaSecurityGroup.connections.allowTo(props?.rdsConfig!, ec2.Port.tcp(3306))
