@@ -27,6 +27,7 @@ const lambdaStack = new LambdaStack(app, 'LambdaStack', {
 const lbAssociationStack = new LoadBalancerAssociationStack(app, 'LBAssociationStack', {
     vpc: vpcStack.vpc,
     lbListener: lbStack.listener,
-    ecsService: ecsStack.ecsService
+    ecsService: ecsStack.ecsService,
+    lambdaStack: lambdaStack
 })
 

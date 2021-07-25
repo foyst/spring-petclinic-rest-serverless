@@ -12,6 +12,8 @@ interface LambdaStackProps extends cdk.StackProps {
 }
 
 export class LambdaStack extends cdk.Stack {
+    getAllOwnersFunction: Function;
+    getOwnerByIdFunction: Function;
 
     constructor(scope: cdk.Construct, id: string, props?: LambdaStackProps) {
         super(scope, id, props);
@@ -60,7 +62,7 @@ export class LambdaStack extends cdk.Stack {
             securityGroups: [lambdaSecurityGroup]
         }
 
-        const getAllOwnersFunction = new Function(this, 'GetAllOwnersFunction', {
+        this.getAllOwnersFunction = new Function(this, 'GetAllOwnersFunction', {
             ...baseProps,
             functionName: 'get-all-owners',
             environment: {
@@ -69,7 +71,7 @@ export class LambdaStack extends cdk.Stack {
             },
         })
 
-        const getOwnerByIdFunction = new Function(this, 'GetOwnerByIdFunction', {
+        this.getOwnerByIdFunction = new Function(this, 'GetOwnerByIdFunction', {
             ...baseProps,
             functionName: 'get-owner-by-id',
             environment: {
