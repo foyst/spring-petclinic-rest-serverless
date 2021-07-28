@@ -32,7 +32,6 @@ export class LambdaStack extends cdk.Stack {
                     "/bin/sh",
                     "-c",
                     ["cd /asset-input/ ",
-                        // "ls -lsah ",
                         "./mvnw clean package -P lambda -DskipTests ",
                         "cp /asset-input/target/spring-petclinic-rest-2.4.2-aws.jar /asset-output/"].join(" && ")
                 ],
