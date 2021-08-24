@@ -103,8 +103,7 @@ public class LambdaConfigTests {
 		invoker.handleRequest(targetStream, output, null);
 
 		Map result = mapper.readValue(output.toByteArray(), Map.class);
-		System.out.println(result);
 		assertThat(result.get("statusCode")).isEqualTo(404);
-		assertThat(result.get("body")).isEqualTo(null);
+		assertThat(result.get("body")).isEqualTo("");
 	}
 }
