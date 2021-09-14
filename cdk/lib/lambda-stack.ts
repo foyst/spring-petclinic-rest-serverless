@@ -1,6 +1,6 @@
 import * as ec2 from '@aws-cdk/aws-ec2';
 import * as cdk from '@aws-cdk/core';
-import {BundlingOutput, Duration} from '@aws-cdk/core';
+import {BundlingOutput, DockerImage, Duration} from '@aws-cdk/core';
 import * as rds from "@aws-cdk/aws-rds";
 import {Code, Function, Runtime} from "@aws-cdk/aws-lambda";
 import * as path from "path";
@@ -27,13 +27,13 @@ export class LambdaStack extends cdk.Stack {
 
         const bundlingOptions = {
             bundling: {
-                image: Runtime.JAVA_8.bundlingImage,
+                image: DockerImage.fromRegistry("ghcr.io/graalvm/graalvm-ce:21.2.0"),
                 command: [
                     "/bin/sh",
                     "-c",
                     ["cd /asset-input/ ",
-                        "./mvnw clean package -P lambda -DskipTests ",
-                        "cp /asset-input/target/spring-petclinic-rest-2.4.2-aws.jar /asset-output/"].join(" && ")
+                        "./mvnw clean package -P lambda -D skipTests ",
+                        "cp /asset-input/target/spring-petclinic-rest-2.4.2-native-zip.zip /asset-output/"].join(" && ")
                 ],
                 outputType: BundlingOutput.ARCHIVED,
                 user: 'root',
@@ -50,13 +50,13 @@ export class LambdaStack extends cdk.Stack {
 
         const baseProps = {
             vpc: props?.vpc,
-            runtime: Runtime.JAVA_8,
+            runtime: Runtime.PROVIDED_AL2,
             code: Code.fromAsset(path.join(__dirname, '../../'), bundlingOptions),
-            handler: 'org.springframework.cloud.function.adapter.aws.FunctionInvoker',
+            handler: 'duff.Class',
             vpcSubnets: {
                 subnetType: ec2.SubnetType.PRIVATE
             },
-            memorySize: 3072,
+            memorySize: 256,
             timeout: Duration.minutes(1),
             securityGroups: [lambdaSecurityGroup]
         }
