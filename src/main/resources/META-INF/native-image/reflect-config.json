@@ -25,5 +25,14 @@
     "allPublicMethods": true,
     "allDeclaredClasses": true,
     "allPublicClasses": true
+  },
+  {
+    "name": "org.joda.time.DateTime",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "allDeclaredClasses": true,
+    "allPublicClasses": true
   }
 ]
