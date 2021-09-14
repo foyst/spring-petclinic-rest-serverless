@@ -371,6 +371,12 @@
                                 <phase>test</phase>
                             </execution>
                         </executions>
+                        <configuration>
+                            <buildArgs>
+                                --enable-url-protocols=http
+                                -H:+AddAllCharsets
+                            </buildArgs>
+                        </configuration>
                     </plugin>
                     <plugin>
                         <artifactId>maven-assembly-plugin</artifactId>
