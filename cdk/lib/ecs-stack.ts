@@ -60,7 +60,7 @@ export class EcsStack extends cdk.Stack {
             serviceName: 'petclinic',
             taskDefinition: ecsTaskDefinition,
             securityGroups: [ecsSecurityGroup],
-            healthCheckGracePeriod: Duration.minutes(1)
+            healthCheckGracePeriod: Duration.seconds(90)
         });
 
         ecsSecurityGroup.connections.allowTo(props?.rdsConfig!, ec2.Port.tcp(3306))
