@@ -30,7 +30,7 @@ export class LoadBalancerAssociationStack extends cdk.Stack {
                 enabled: true,
                 healthyHttpCodes: '200',
                 healthyThresholdCount: 2,
-                interval: Duration.seconds(30),
+                interval: Duration.seconds(15),
                 unhealthyThresholdCount: 2
             }
         })
