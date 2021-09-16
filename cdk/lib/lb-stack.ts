@@ -5,6 +5,7 @@ import {ApplicationListener, ApplicationLoadBalancer} from "@aws-cdk/aws-elastic
 
 interface LoadBalancerStackProps extends cdk.StackProps {
     vpc: ec2.Vpc
+    prefix: string
 }
 
 export class LoadBalancerStack extends cdk.Stack {
@@ -16,7 +17,7 @@ export class LoadBalancerStack extends cdk.Stack {
         super(scope, id, props);
 
         this.loadBalancer = new elbv2.ApplicationLoadBalancer(this, 'load-balancer', {
-            loadBalancerName: 'petclinic',
+            loadBalancerName: props?.prefix + 'petclinic',
             vpc: props?.vpc!,
             internetFacing: true
         });

@@ -11,6 +11,7 @@ interface LoadBalancerAssociationStackProps extends cdk.StackProps {
     vpc: ec2.Vpc
     lbListener: elbv2.ApplicationListener
     ecsService: ecs.FargateService
+    prefix: string
     lambdaStack: LambdaStack
 }
 
@@ -22,7 +23,7 @@ export class LoadBalancerAssociationStack extends cdk.Stack {
         const fargateTargetGroup = new elbv2.ApplicationTargetGroup(this, 'fargate-target-group', {
             vpc: props?.vpc,
             protocol: elbv2.ApplicationProtocol.HTTP,
-            targetGroupName: 'petclinic-fargate',
+            targetGroupName: props?.prefix + 'petclinic-fargate',
             targetType: elbv2.TargetType.IP,
             port: 8080,
             healthCheck: {
@@ -43,7 +44,7 @@ export class LoadBalancerAssociationStack extends cdk.Stack {
 
         const getAllOwnersTargetGroup = new elbv2.ApplicationTargetGroup(this, 'get-all-owners-target-group', {
             vpc: props?.vpc,
-            targetGroupName: 'petclinic-lambda-get-all-owners',
+            targetGroupName: `${props?.prefix}-petclinic-getAllOwners`,
             targetType: elbv2.TargetType.LAMBDA,
             targets: [new targets.LambdaTarget(props?.lambdaStack.getAllOwnersFunction!)]
         })
@@ -52,14 +53,13 @@ export class LoadBalancerAssociationStack extends cdk.Stack {
             conditions: [ListenerCondition.pathPatterns(['/api/owners'])],
             priority: 10,
             action: ListenerAction.weightedForward([
-                {targetGroup: fargateTargetGroup, weight: 1},
                 {targetGroup: getAllOwnersTargetGroup, weight: 1}
             ])
         });
 
         const getOwnerByIdTargetGroup = new elbv2.ApplicationTargetGroup(this, 'get-owner-by-id-target-group', {
             vpc: props?.vpc,
-            targetGroupName: 'petclinic-lambda-get-owner-by-id',
+            targetGroupName: `${props?.prefix}-petclinic-getOwnerById`,
             targetType: elbv2.TargetType.LAMBDA,
             targets: [new targets.LambdaTarget(props?.lambdaStack.getOwnerByIdFunction!)]
         })
@@ -68,7 +68,6 @@ export class LoadBalancerAssociationStack extends cdk.Stack {
             conditions: [ListenerCondition.pathPatterns(['/api/owners/*'])],
             priority: 11,
             action: ListenerAction.weightedForward([
-                {targetGroup: fargateTargetGroup, weight: 1},
                 {targetGroup: getOwnerByIdTargetGroup, weight: 1}
             ])
         });

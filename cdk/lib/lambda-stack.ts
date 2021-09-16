@@ -1,14 +1,29 @@
 import * as ec2 from '@aws-cdk/aws-ec2';
 import * as cdk from '@aws-cdk/core';
-import {BundlingOutput, DockerImage, Duration} from '@aws-cdk/core';
+import {BundlingOutput, Duration} from '@aws-cdk/core';
 import * as rds from "@aws-cdk/aws-rds";
 import {Code, Function, Runtime} from "@aws-cdk/aws-lambda";
 import * as path from "path";
 import {homedir} from "os";
 
+interface BundlingOptions {
+    image: cdk.DockerImage
+    command: string[]
+}
+
+interface LambdaOptions {
+    runtime: Runtime
+    handler: string
+    memorySize: number
+    envVariables: {[key:string]: string}
+}
+
 interface LambdaStackProps extends cdk.StackProps {
     vpc: ec2.Vpc
+    prefix: string
     rdsConfig: rds.DatabaseInstance
+    bundlingOptions: BundlingOptions
+    lambdaOptions: LambdaOptions
 }
 
 export class LambdaStack extends cdk.Stack {
@@ -27,14 +42,7 @@ export class LambdaStack extends cdk.Stack {
 
         const bundlingOptions = {
             bundling: {
-                image: DockerImage.fromRegistry("ghcr.io/graalvm/graalvm-ce:21.2.0"),
-                command: [
-                    "/bin/sh",
-                    "-c",
-                    ["cd /asset-input/ ",
-                        "./mvnw clean package -P lambda -D skipTests ",
-                        "cp /asset-input/target/spring-petclinic-rest-2.4.2-native-zip.zip /asset-output/"].join(" && ")
-                ],
+                ...props!.bundlingOptions,
                 outputType: BundlingOutput.ARCHIVED,
                 user: 'root',
                 volumes: [{hostPath: `${homedir()}/.m2`, containerPath: '/root/.m2/'}]
@@ -42,28 +50,28 @@ export class LambdaStack extends cdk.Stack {
         };
 
         const envVariables = {
+            ...props!.lambdaOptions.envVariables,
             'SPRING_DATASOURCE_URL': `jdbc:mysql://${props?.rdsConfig.dbInstanceEndpointAddress!}:3306/petclinic?useUnicode=true`,
-            'SPRING_PROFILES_ACTIVE': 'mysql,spring-data-jpa',
             'SPRING_DATASOURCE_USERNAME': rdsCredentialsSecret.secretValueFromJson('username').toString(),
             'SPRING_DATASOURCE_PASSWORD': rdsCredentialsSecret.secretValueFromJson('password').toString()
         }
 
         const baseProps = {
             vpc: props?.vpc,
-            runtime: Runtime.PROVIDED_AL2,
+            runtime: props!.lambdaOptions.runtime,
             code: Code.fromAsset(path.join(__dirname, '../../'), bundlingOptions),
-            handler: 'duff.Class',
+            handler: props!.lambdaOptions.handler,
             vpcSubnets: {
                 subnetType: ec2.SubnetType.PRIVATE
             },
-            memorySize: 256,
+            memorySize: props?.lambdaOptions.memorySize,
             timeout: Duration.minutes(1),
             securityGroups: [lambdaSecurityGroup]
         }
 
         this.getAllOwnersFunction = new Function(this, 'GetAllOwnersFunction', {
             ...baseProps,
-            functionName: 'get-all-owners',
+            functionName: props?.prefix + 'get-all-owners',
             environment: {
                 ...envVariables,
                 'SPRING_CLOUD_FUNCTION_DEFINITION': 'getAllOwners'
@@ -72,7 +80,7 @@ export class LambdaStack extends cdk.Stack {
 
         this.getOwnerByIdFunction = new Function(this, 'GetOwnerByIdFunction', {
             ...baseProps,
-            functionName: 'get-owner-by-id',
+            functionName: props?.prefix + 'get-owner-by-id',
             environment: {
                 ...envVariables,
                 'SPRING_CLOUD_FUNCTION_DEFINITION': 'getOwnerById'
