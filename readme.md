@@ -14,7 +14,7 @@ In the root folder, run `cd cdk && npm install`
 
 Run `./mvnw clean package` and copy the `target/spring-petclinic-rest-2.4.2.jar` file into the `docker` folder (TODO: need to streamline this into either the Maven or CDK build)
 
-You can checkout the branches in this order, running `cdk deploy --require-approval=never --all` between each branch to see how you can gradually transition from ECS container, to Java Lambdas and finally GraalVM Lambdas:
+You can checkout the branches in this order, running `cd cdk && cdk deploy --require-approval=never --all` between each branch to see how you can gradually transition from ECS container, to Java Lambdas and finally GraalVM Lambdas:
 ```
 master -> 1-spring-cloud-function -> 2-spring-cloud-native
 ```
